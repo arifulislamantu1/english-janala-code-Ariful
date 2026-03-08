@@ -1,4 +1,19 @@
-const loadLessons =()=>{
+const createElements = (arr) => {
+ const htmlElements = arr.map((el) => `<span class="btn">${el}</span>`)
+ return (htmlElements.join(" "));
+};
+ 
+const manageSpinner = (status) => {
+if(status === true){
+    document.getElementById("spinner").classList.remove("hidden");
+    document.getElementById("word-container").classList.add('hidden');
+}else{
+    document.getElementById("word-container").classList.remove("hidden");
+    document.getElementById("spinner").classList.add('hidden');
+}
+};
+
+const loadLessons = () => {
     fetch('https://openapi.programming-hero.com/api/levels/all') // promise of response
 
     .then(res => res.json()) // promise of json data
@@ -10,7 +25,8 @@ const removeActive = () => {
     lessonBtn.forEach(btn => btn.classList.remove("active"))
 };
 
-const loadLevelWod =(id)=>{
+const loadLevelWord = (id) => {
+    manageSpinner(true);
     const url = `https://openapi.programming-hero.com/api/level/${id}`;
     fetch(url)
     .then(res => res.json())
@@ -22,7 +38,44 @@ const loadLevelWod =(id)=>{
 })
 };
 
-const displayLevelWord = (words) =>{
+const loadWordDetail = async(id) => {
+    manageSpinner(true);
+    const url = `https://openapi.programming-hero.com/api/word/${id}`;
+    const res = await fetch(url); 
+    const details = await res.json();
+    manageSpinner(false);
+    displayWordDetail(details.data);
+    
+};
+
+const displayWordDetail = (word) => {
+    const detailsContainer = document.getElementById('details-container');
+    detailsContainer.innerHTML = `
+    
+    <div class="space-y-2">
+      <h2 class="text-2xl font-bold">${word.word}(<i class="fa-solid fa-microphone-lines"></i> :${word.pronunciation})</h2>
+      </div>
+      <div class="space-y-2">
+      <h2 class="font-bold">Meaning</h2>
+      <p">${word.meaning}</p>
+      </div>
+      <div class="space-y-2">
+      <h2 class="font-bold">Example</h2>
+      <p>${word.sentence}</p>
+      </div>
+      <div class="space-y-2 ">
+      <h2 class="font-bold">সমার্থক শব্দ গুলো</h2>
+      <div class="space-x-3">${createElements(word.synonyms)}</div>
+      </div>
+
+    `;
+    
+    document.getElementById('word_modal').showModal();
+
+
+};
+
+const displayLevelWord = (words) => {
     const wordContainer = document.getElementById('word-container')
     wordContainer.innerHTML = '';
 
@@ -32,7 +85,7 @@ const displayLevelWord = (words) =>{
         <p class="text-xl font-medium text-gray-400 ">এই Lesson এ এখনো কোন Vocabulary যুক্ত করা হয়নি।</p>
         <h2 class="font-bold text-4xl">নেক্সট Lesson এ যান</h2>
        </div>`;
-
+        manageSpinner(false);
         return;
     }
 
@@ -44,16 +97,15 @@ const displayLevelWord = (words) =>{
         <p class="font-semibold">Meaning / Pronunciation</p>
         <div class="font-bangla trxt-2xl font-semibold">"${word.meaning? word.meaning : 'অর্থ পাওয়া যায়নি'} / ${word.pronunciation? word.pronunciation : 'Pronunciation পাওয়া যায়নি'}"</div>
         <div class="flex justify-between items-center">
-          <button class="btn bg-[#1A91FF10] hover:bg-[#1A91FF80]"><i class="fa-solid fa-circle-info"></i></button>
+          <button onclick="loadWordDetail(${word.id})" class="btn bg-[#1A91FF10] hover:bg-[#1A91FF80]"><i class="fa-solid fa-circle-info"></i></button>
           <button class="btn bg-[#1A91FF10] hover:bg-[#1A91FF80]"><i class="fa-solid fa-volume-high"></i></button>
         </div>
       </div>
         `;
         wordContainer.append(card);
-    })
+    });
+    manageSpinner(false)
 };
-
-
 
 const displayLessons = (lessons) => {
 
@@ -67,7 +119,7 @@ for(let lesson of lessons){
 const btnDiv = document.createElement('div');
 
 btnDiv.innerHTML =`
-            <button id="lesson-btn-${lesson.level_no}" onclick="loadLevelWod(${lesson.level_no})" class="btn btn-outline btn-primary lesson-btn"><i class="fa-solid fa-book-open"></i>Lesson -${lesson.level_no} </button>
+            <button id="lesson-btn-${lesson.level_no}" onclick="loadLevelWord(${lesson.level_no})" class="btn btn-outline btn-primary lesson-btn"><i class="fa-solid fa-book-open"></i>Lesson -${lesson.level_no} </button>
 `;
 
 //  4. append  into container
